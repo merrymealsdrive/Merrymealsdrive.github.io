@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Merry Meals</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="is-loading">
+    <div id="loading-spinnerthing" class="spinner-container active">
+      <div class="spinner"></div>
+      <div class="loading-text">Getting Data</div>
+    </div>
+
+    <div id="snow-container"></div>
+    <div class="bg"></div>
+
+    <header class="header">
+      <h1 class="title">Merry Meals</h1>
+      <h3 class="countdown-title">Time Left:</h3>
+      <div id="countdown" class="countdown"></div>
+      <div class="donate-container">
+        <a
+          href="https://funddrives.sfmfoodbank.org/general/redwood-merry-meals"
+          target="_blank"
+          class="donate-button"
+          id="donate-redwood"
+          >Donate to Redwood</a
+        >
+        <a
+          href="https://funddrives.sfmfoodbank.org/general/tam-high-dollars-for-dishes"
+          target="_blank"
+          class="donate-button"
+          id="donate-tam"
+          >Donate to Tam</a
+        >
+      </div>
+    </header>
+
+    <section id="leaderboard" class="leaderboard"></section>
+
+    <script src="script.js"></script>
+  </body>
+</html>
