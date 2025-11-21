@@ -46,47 +46,30 @@ const schoolUrls = {
     "https://funddrives.sfmfoodbank.org/general/tam-high-dollars-for-dishes",
 };
 
-const corsurl = "https://api.allorigins.win/get?url="; //unfortunately this is blocked on school wifi so ill see what happens
+const corsurl = "https://merrymeals.piguyraspberry.workers.dev";
 const leaderboard = document.getElementById("leaderboard");
 const mainContent = document.body;
 const loadingSpinner = document.getElementById("loading-spinnerthing");
 
-//never done this before so after many tutorials here goes nothin
 async function fetchAndParseAmount(ourl) {
-  const encodedUrl = encodeURIComponent(ourl);
-  const maxRetries = 3;
-  let attempts = 0;
-  //try 3 times to fix madisons problem
-  while (attempts < maxRetries) {
-    try {
-      const proxyResponse = await fetch(`${corsurl}${encodedUrl}`);
-      const data = await proxyResponse.json();
+  const urlWithParams = `${corsurl}?url=${encodeURIComponent(ourl)}`;
 
-      const p = new DOMParser();
-      const dm = p.parseFromString(data.contents, "text/html");
-      const aElem = dm.querySelector(".page-raised");
+  try {
+    const proxyResponse = await fetch(urlWithParams);
+    const data = await proxyResponse.json();
 
-      if (aElem) {
-        const rawAmount = aElem.textContent.trim();
-        const numericAmount = parseInt(
-          rawAmount.replace("$", "").replace(/,/g, "")
-        );
-        return numericAmount || 0;
-      }
+    if (data.error) {
+      console.error(`Worker Error for ${ourl}:`, data.error);
       return 0;
-    } catch (error) {
-      attempts++;
-      if (attempts >= maxRetries) {
-        console.error(
-          `Failed to fetch data from ${ourl} after ${maxRetries} attempts:`,
-          error
-        );
-        return 0;
-      }
     }
+
+    return data.amount || 0;
+  } catch (error) {
+    console.error(`Failed to connect to Worker:`, error);
+    return 0;
   }
-  return 0;
 }
+
 // phew
 function renderLeaderboard() {
   leaderboard.innerHTML = "";
