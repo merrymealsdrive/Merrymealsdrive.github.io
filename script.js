@@ -53,26 +53,39 @@ const loadingSpinner = document.getElementById("loading-spinnerthing");
 
 //never done this before so after many tutorials here goes nothin
 async function fetchAndParseAmount(ourl) {
-  try {
-    const proxyResponse = await fetch(`${corsurl}${encodeURIComponent(ourl)}`);
-    const data = await proxyResponse.json();
+  const encodedUrl = encodeURIComponent(ourl);
+  const maxRetries = 3;
+  let attempts = 0;
+  //try 3 times to fix madisons problem
+  while (attempts < maxRetries) {
+    try {
+      const proxyResponse = await fetch(`${corsurl}${encodedUrl}`);
+      const data = await proxyResponse.json();
 
-    const p = new DOMParser();
-    const dm = p.parseFromString(data.contents, "text/html");
-    const aElem = dm.querySelector(".page-raised");
+      const p = new DOMParser();
+      const dm = p.parseFromString(data.contents, "text/html");
+      const aElem = dm.querySelector(".page-raised");
 
-    if (aElem) {
-      const rawAmount = aElem.textContent.trim();
-      const numericAmount = parseInt(
-        rawAmount.replace("$", "").replace(/,/g, "")
-      );
-      return numericAmount || 0;
+      if (aElem) {
+        const rawAmount = aElem.textContent.trim();
+        const numericAmount = parseInt(
+          rawAmount.replace("$", "").replace(/,/g, "")
+        );
+        return numericAmount || 0;
+      }
+      return 0;
+    } catch (error) {
+      attempts++;
+      if (attempts >= maxRetries) {
+        console.error(
+          `Failed to fetch data from ${ourl} after ${maxRetries} attempts:`,
+          error
+        );
+        return 0;
+      }
     }
-    return 0;
-  } catch (error) {
-    console.error(`Failed to fetch data from ${ourl}:`, error);
-    return 0;
   }
+  return 0;
 }
 // phew
 function renderLeaderboard() {
