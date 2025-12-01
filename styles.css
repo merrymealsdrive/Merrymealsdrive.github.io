@@ -286,6 +286,18 @@ body.is-loading > *:not(.spinner-container) {
   overflow: hidden;
 }
 
+.bar-can-fill {
+  position: absolute;
+  height: 100%;
+  width: 0%; /* Wset by js */
+  top: 0;
+  left: 0;
+  opacity: 0.4; /* darken */
+  z-index: 1; /* below stripes zwise */
+  background: #000000;
+  transition: width 2s ease-in-out, height 2s ease-in-out;
+}
+
 .bar-fill[data-color="#d32f2f"] {
   background: linear-gradient(180deg, #f44336 0%, #d32f2f 100%);
 }
@@ -336,7 +348,7 @@ body.is-loading > *:not(.spinner-container) {
 }
 
 .school-amount {
-  width: 8.125rem; /* 130px */
+  width: 9.5rem; 
   text-align: left;
   padding-left: 0.9375rem; /* 15px */
   font-size: 1.5rem;
@@ -469,6 +481,12 @@ body.is-loading > *:not(.spinner-container) {
     border-radius: 1.25rem 1.25rem 0 0; /* 20px */
     justify-content: flex-start;
     transition: height 2s ease-in-out, width 2s ease-in-out;
+  }
+
+  .bar-can-fill {
+    top: auto;
+    bottom: 0;
+    left: 0;
   }
 
   .bar-fill::before {

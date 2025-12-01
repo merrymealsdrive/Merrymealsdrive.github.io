@@ -26,15 +26,17 @@ updateCountdown();
 // this will be fun get ready for code magic
 const schools = [
   {
-    name: "Redwood High School", //LETS GO REDWOOD!!!
+    name: "Redwood High School",
     color: "#d32f2f",
     amount: 0,
+    cans: 0,
     logo: "https://image.maxpreps.io/school-mascot/1/2/6/12616b84-157c-48d3-b353-434576d9df8d.gif?version=636093507600000000&width=256&height=256&auto=webp&format=pjpg",
   },
   {
-    name: "Tam High School", //u guys are fine i guess*/
+    name: "Tam High School",
     color: "#1565c0",
     amount: 0,
+    cans: 0,
     logo: "https://th.bing.com/th/id/OIP.VIQM1HgTUuP3fZVgMsd8HwHaFj?w=206&h=180&c=7&r=0&o=7&dpr=1.5&pid=1.7&rm=3",
   },
 ];
@@ -70,20 +72,38 @@ async function fetchAndParseAmount(ourl) {
   }
 }
 
+const cansDataEndpoint =
+  "https://gist.githubusercontent.com/merrymealsdrive/41dc984069947d716557c93a8664187e/raw/cansData.json";
+
+async function fetchCansData() {
+  try {
+    const response = await fetch(cansDataEndpoint);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Cans Data (Status: ${response.status})`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Failed to fetch Cans Data:`, error);
+    return [];
+  }
+}
+
 // phew
 function renderLeaderboard() {
   leaderboard.innerHTML = "";
 
-  const amounts = schools.map((s) => s.amount);
-  const max = Math.max(...amounts);
+  const totalAmounts = schools.map((s) => s.amount + s.cans);
+  const max = Math.max(...totalAmounts);
 
-  // guys if ur at 0 u dont deserve to be winning...
   const isWinningAvailable = max > 0;
 
   schools.forEach((s) => {
+    const totalDonation = s.amount + s.cans;
+
     const bar = document.createElement("div");
     bar.className = "school-bar";
-    if (s.amount === max && isWinningAvailable) {
+    if (totalDonation === max && isWinningAvailable) {
       bar.classList.add("school-bar--winner");
     }
     const name = document.createElement("div");
@@ -96,6 +116,8 @@ function renderLeaderboard() {
     const fill = document.createElement("div");
     fill.className = "bar-fill";
     fill.dataset.color = s.color;
+    fill.dataset.onlineAmount = s.amount;
+    fill.dataset.offlineAmount = s.cans;
 
     const logo = document.createElement("div");
     logo.className = "bar-logo";
@@ -104,14 +126,18 @@ function renderLeaderboard() {
 
     const amount = document.createElement("div");
     amount.className = "school-amount";
-    amount.textContent = "$" + s.amount.toLocaleString();
+    amount.innerHTML = `
+        Total: $${totalDonation.toLocaleString()}
+        <br>
+        <span style="font-size: 0.7em; font-weight: 400; opacity: 0.8;">
+          Cans: $${s.cans.toLocaleString()}  | Online: $${s.amount.toLocaleString()}
+        </span>
+    `;
 
-    // i hope this never has to be used but if NO ONE DONATES that this is what it is for
-    if (s.amount === 0) {
+    if (totalDonation === 0) {
       const zeroText = document.createElement("div");
       zeroText.className = "zero-amount-text";
       zeroText.textContent = "No donations yet :(";
-      // css and html in js ????
       zeroText.style.cssText = `
         position: absolute;
         top: 50%;
@@ -126,6 +152,10 @@ function renderLeaderboard() {
       outer.appendChild(zeroText);
     }
 
+    const canFill = document.createElement("div");
+    canFill.className = "bar-can-fill";
+    fill.appendChild(canFill);
+
     fill.appendChild(logo);
     outer.appendChild(fill);
 
@@ -135,24 +165,27 @@ function renderLeaderboard() {
 
     leaderboard.appendChild(bar);
 
-    //
-    if (s.amount === max && isWinningAvailable) {
+    if (totalDonation === max && isWinningAvailable) {
       const winningTag = document.createElement("div");
       winningTag.className = "winning-tag";
       winningTag.textContent = "WINNING!";
       winningTag.dataset.school = s.name.split(" ")[0].toLowerCase();
-      // (this is not as good) leaderboard.appendChild(winningTag);
     }
 
-    // graphic magic
-    const percentage = (max > 0 ? (s.amount / max) * 100 : 0) + "%";
+    const totalPercentage = (max > 0 ? (totalDonation / max) * 100 : 0) + "%";
+    const canPercentage =
+      (totalDonation > 0 ? (s.cans / totalDonation) * 100 : 0) + "%";
 
     if (window.innerWidth <= 800) {
-      fill.style.height = percentage;
+      fill.style.height = totalPercentage;
       fill.style.width = "100%";
+      canFill.style.height = canPercentage;
+      canFill.style.width = "100%";
     } else {
-      fill.style.width = percentage;
+      fill.style.width = totalPercentage;
       fill.style.height = "100%";
+      canFill.style.width = canPercentage;
+      canFill.style.height = "100%";
     }
   });
 }
@@ -162,10 +195,15 @@ async function fetchAmountsAndRender() {
   if (loadingSpinner) {
     loadingSpinner.classList.add("active");
   }
+
+  const cansData = await fetchCansData();
+  const cansMap = new Map(cansData.map((item) => [item.name, item.cans]));
+
   const fetchPromises = schools.map(async (school) => {
     const url = schoolUrls[school.name];
     if (url) {
       school.amount = await fetchAndParseAmount(url);
+      school.cans = cansMap.get(school.name) || 0;
     }
   });
   await Promise.all(fetchPromises);
